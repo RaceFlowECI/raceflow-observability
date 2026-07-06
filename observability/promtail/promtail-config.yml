@@ -1,0 +1,101 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/promtail-positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+
+  - job_name: api-gateway
+    static_configs:
+      - targets: [localhost]
+        labels:
+          service: raceflow-api-gateway
+          env:     local
+          __path__: /logs/api-gateway/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level:   level
+            message: message
+      - labels:
+          level:
+
+  - job_name: auth-service
+    static_configs:
+      - targets: [localhost]
+        labels:
+          service: raceflow-auth-service
+          env:     local
+          __path__: /logs/auth-service/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level:   level
+            message: message
+      - labels:
+          level:
+
+  - job_name: room-service
+    static_configs:
+      - targets: [localhost]
+        labels:
+          service: raceflow-room-service
+          env:     local
+          __path__: /logs/room-service/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level:   level
+            message: message
+      - labels:
+          level:
+
+  - job_name: realtime-service
+    static_configs:
+      - targets: [localhost]
+        labels:
+          service: raceflow-realtime-service
+          env:     local
+          __path__: /logs/realtime-service/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level:   level
+            message: message
+      - labels:
+          level:
+
+  - job_name: session-service
+    static_configs:
+      - targets: [localhost]
+        labels:
+          service: raceflow-session-service
+          env:     local
+          __path__: /logs/session-service/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level:   level
+            message: message
+      - labels:
+          level:
+
+  - job_name: metrics-service
+    static_configs:
+      - targets: [localhost]
+        labels:
+          service: raceflow-metrics-service
+          env:     local
+          __path__: /logs/metrics-service/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level:   level
+            message: message
+      - labels:
+          level:

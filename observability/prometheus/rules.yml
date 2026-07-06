@@ -1,0 +1,46 @@
+groups:
+
+  - name: raceflow.availability
+    rules:
+
+      - alert: RaceFlowServiceDown
+        expr: up{job=~"raceflow-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Servicio {{ $labels.job }} caido"
+          description: "El scrape de {{ $labels.job }} ({{ $labels.instance }}) lleva mas de 1 minuto fallando."
+
+  - name: raceflow.errors
+    rules:
+
+      - alert: RaceFlowHighErrorRate
+        expr: |
+          (
+            sum by (job) (rate(http_server_requests_seconds_count{status=~"5..",job=~"raceflow-.*"}[5m]))
+            /
+            sum by (job) (rate(http_server_requests_seconds_count{job=~"raceflow-.*"}[5m]))
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tasa de error alta en {{ $labels.job }}"
+          description: "{{ $labels.job }} tiene mas del 5% de respuestas 5xx (valor: {{ $value | humanizePercentage }})."
+
+  - name: raceflow.slo
+    rules:
+
+      - alert: RaceFlowRankingLatencyHigh
+        expr: |
+          histogram_quantile(
+            0.99,
+            rate(raceflow_ranking_update_duration_seconds_bucket[5m])
+          ) > 1.0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SLO violado: ranking p99 > 1s"
+          description: "El percentil 99 de raceflow_ranking_update_duration_seconds supera el SLO de 1s (valor: {{ $value | humanizeDuration }})."
