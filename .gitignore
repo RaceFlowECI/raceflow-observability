@@ -1,2 +1,5 @@
 .DS_Store
 Thumbs.db
+
+# Evidencia generada en simulaciones locales
+evidence/
