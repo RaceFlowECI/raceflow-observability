@@ -1,0 +1,36 @@
+global:
+  resolve_timeout: 5m
+
+# Árbol de rutas: crítico y warning van al mismo webhook de demo;
+# sustituir la URL por Slack / PagerDuty / email en producción.
+route:
+  receiver: webhook-log
+  group_by: [alertname, job, severity]
+  group_wait:      30s
+  group_interval:  5m
+  repeat_interval: 1h
+  routes:
+    - matchers:
+        - severity = critical
+      receiver: webhook-log
+      group_wait: 10s        # notificar más rápido los críticos
+    - matchers:
+        - severity = warning
+      receiver: webhook-log
+
+receivers:
+  - name: webhook-log
+    webhook_configs:
+      - url: http://host.docker.internal:5001/alert
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+        max_alerts: 10
+
+# Los warnings no silencian a los críticos entre sí:
+inhibit_rules:
+  - source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity = warning
+    equal: [job]

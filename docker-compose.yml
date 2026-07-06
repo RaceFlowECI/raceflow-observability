@@ -48,6 +48,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
       - observability
     depends_on:
@@ -98,5 +99,20 @@ services:
       - ./observability/tempo/tempo-config.yml:/etc/tempo.yaml:ro
       - tempo_data:/tmp/tempo
     command: -config.file=/etc/tempo.yaml
+    networks:
+      - observability
+  # ── Alertmanager ───────────────────────────────────────────────────────
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: raceflow-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.external-url=http://localhost:9093
     networks:
       - observability

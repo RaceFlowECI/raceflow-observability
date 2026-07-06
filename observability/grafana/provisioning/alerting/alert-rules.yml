@@ -1,0 +1,112 @@
+apiVersion: 1
+
+groups:
+  # ── Disponibilidad ─────────────────────────────────────────────────
+  - orgId:    1
+    name:     RaceFlow Disponibilidad
+    folder:   RaceFlow Alerts
+    interval: 1m
+    rules:
+
+      - uid:   rf-service-down
+        title: RaceFlowServiceDown
+        condition: A
+        for:   1m
+        labels:
+          severity: critical
+        annotations:
+          summary:     "Servicio {{ $labels.job }} caido"
+          description: "El target {{ $labels.instance }} lleva mas de 1 minuto sin responder."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr:    'up{job=~"raceflow-.*"} == 0'
+              instant: true
+              refId:   A
+
+  # ── Errores HTTP ───────────────────────────────────────────────────
+  - orgId:    1
+    name:     RaceFlow Errores
+    folder:   RaceFlow Alerts
+    interval: 1m
+    rules:
+
+      - uid:   rf-high-error-rate
+        title: RaceFlowHighErrorRate
+        condition: B
+        for:   2m
+        labels:
+          severity: warning
+        annotations:
+          summary:     "Tasa de error alta en {{ $labels.job }}"
+          description: "Mas del 5 pct de respuestas son 5xx en los ultimos 5 minutos."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: >
+                sum by (job) (rate(http_server_requests_seconds_count{status=~"5..",job=~"raceflow-.*"}[5m]))
+                /
+                sum by (job) (rate(http_server_requests_seconds_count{job=~"raceflow-.*"}[5m]))
+              instant: false
+              refId:   A
+          - refId: B
+            relativeTimeRange: { from: 0, to: 0 }
+            datasourceUid: "__expr__"
+            model:
+              type:       threshold
+              refId:      B
+              expression: A
+              conditions:
+                - evaluator:
+                    type:   gt
+                    params: [0.05]
+                  operator: { type: and }
+                  reducer:
+                    type:   last
+                    params: []
+
+  # ── SLO Ranking ────────────────────────────────────────────────────
+  - orgId:    1
+    name:     RaceFlow SLO
+    folder:   RaceFlow Alerts
+    interval: 1m
+    rules:
+
+      - uid:   rf-ranking-latency-high
+        title: RaceFlowRankingLatencyHigh
+        condition: B
+        for:   3m
+        labels:
+          severity: critical
+        annotations:
+          summary:     "SLO violado — ranking p99 supera 1 segundo"
+          description: "El percentil 99 de actualizacion de ranking lleva 3 minutos por encima del SLO de 1s."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: >
+                histogram_quantile(0.99,
+                  rate(raceflow_ranking_update_duration_seconds_bucket[5m]))
+              instant: false
+              refId:   A
+          - refId: B
+            relativeTimeRange: { from: 0, to: 0 }
+            datasourceUid: "__expr__"
+            model:
+              type:       threshold
+              refId:      B
+              expression: A
+              conditions:
+                - evaluator:
+                    type:   gt
+                    params: [1.0]
+                  operator: { type: and }
+                  reducer:
+                    type:   last
+                    params: []

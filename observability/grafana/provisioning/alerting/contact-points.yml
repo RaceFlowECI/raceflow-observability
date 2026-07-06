@@ -1,0 +1,22 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: RaceFlow Webhook
+    receivers:
+      - uid: raceflow-webhook
+        type: webhook
+        settings:
+          url: http://host.docker.internal:5001/alert
+          httpMethod: POST
+        disableResolveMessage: false
+
+  # Contact point "null" para silenciar sin ruta activa (útil en demos)
+  - orgId: 1
+    name: Silencio
+    receivers:
+      - uid: raceflow-silencio
+        type: webhook
+        settings:
+          url: http://localhost:5001/null
+        disableResolveMessage: true
