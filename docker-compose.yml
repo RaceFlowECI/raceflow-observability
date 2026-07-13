@@ -21,7 +21,7 @@ services:
     container_name: raceflow-prometheus
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - "9091:9090"  # host 9091: el 9090 lo ocupa el gRPC de auth-service
     volumes:
       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./observability/prometheus/rules.yml:/etc/prometheus/rules.yml:ro
