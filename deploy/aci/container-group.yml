@@ -1,0 +1,185 @@
+apiVersion: 2021-09-01
+location: mexicocentral
+name: raceflow-observability
+properties:
+  containers:
+    - name: prometheus
+      properties:
+        image: prom/prometheus:v2.51.0
+        command:
+          - /bin/prometheus
+          - --config.file=/etc/prometheus/prometheus.yml
+          - --storage.tsdb.path=/prometheus
+          - --storage.tsdb.retention.time=3d
+        ports:
+          - port: 9090
+        resources:
+          requests:
+            cpu: 0.5
+            memoryInGb: 0.5
+        volumeMounts:
+          - name: prometheus-config
+            mountPath: /etc/prometheus
+          - name: prometheus-data
+            mountPath: /prometheus
+
+    - name: grafana
+      properties:
+        image: grafana/grafana:10.4.0
+        environmentVariables:
+          - name: GF_SECURITY_ADMIN_USER
+            value: admin
+          - name: GF_SECURITY_ADMIN_PASSWORD
+            secureValue: "<GRAFANA_ADMIN_PASSWORD>"
+          - name: GF_USERS_ALLOW_SIGN_UP
+            value: "false"
+          - name: GF_FEATURE_TOGGLES_ENABLE
+            value: traceqlEditor
+        ports:
+          - port: 3000
+        resources:
+          requests:
+            cpu: 0.5
+            memoryInGb: 0.5
+        volumeMounts:
+          - name: grafana-data
+            mountPath: /var/lib/grafana
+          - name: grafana-provisioning
+            mountPath: /etc/grafana/provisioning
+          - name: grafana-dashboards
+            mountPath: /etc/grafana/dashboards
+
+    - name: loki
+      properties:
+        image: grafana/loki:2.9.4
+        # ACI's `command` replaces the image ENTRYPOINT entirely (unlike
+        # docker-compose's `command:`, which appends args to it) -- the
+        # binary path must be included explicitly.
+        command:
+          - /usr/bin/loki
+          - -config.file=/etc/loki/local-config.yaml
+        ports:
+          - port: 3100
+        resources:
+          requests:
+            cpu: 0.25
+            memoryInGb: 0.5
+        volumeMounts:
+          - name: loki-config
+            mountPath: /etc/loki
+          - name: loki-data
+            mountPath: /loki
+
+    - name: tempo
+      properties:
+        image: grafana/tempo:2.4.0
+        command:
+          - /tempo
+          - -config.file=/etc/tempo-conf/tempo-config.yml
+        ports:
+          - port: 3200
+          - port: 4317
+          - port: 4318
+        resources:
+          requests:
+            cpu: 0.25
+            memoryInGb: 0.5
+        volumeMounts:
+          - name: tempo-config
+            mountPath: /etc/tempo-conf
+          - name: tempo-data
+            mountPath: /tmp/tempo
+
+    - name: alertmanager
+      properties:
+        image: prom/alertmanager:v0.27.0
+        command:
+          - /bin/alertmanager
+          - --config.file=/etc/alertmanager/alertmanager.yml
+          - --storage.path=/alertmanager
+        ports:
+          - port: 9093
+        resources:
+          requests:
+            cpu: 0.1
+            memoryInGb: 0.2
+        volumeMounts:
+          - name: alertmanager-config
+            mountPath: /etc/alertmanager
+
+  osType: Linux
+  restartPolicy: OnFailure
+  ipAddress:
+    type: Public
+    dnsNameLabel: raceflow-observability
+    ports:
+      - protocol: tcp
+        port: 3000
+      - protocol: tcp
+        port: 9090
+      - protocol: tcp
+        port: 9093
+
+  # Volumes reference an Azure Files share per mount target (ACI mounts
+  # the *whole* share at the container path -- a single shared file share
+  # for everything would leak, e.g., prometheus.yml into Grafana's
+  # provisioning directory, which Grafana would then fail to parse).
+  #
+  # storageAccountKey (above) and GRAFANA_ADMIN_PASSWORD are intentionally
+  # NOT filled in here. Fetch/choose them and substitute at deploy time --
+  # see README.md in this folder. Never commit real values: this
+  # container group is publicly reachable, unlike the local docker-compose
+  # instance.
+  volumes:
+    - name: prometheus-config
+      azureFile:
+        shareName: prometheus-config
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+    - name: prometheus-data
+      azureFile:
+        shareName: prometheus-data
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+    - name: grafana-data
+      azureFile:
+        shareName: grafana-data
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+    - name: grafana-provisioning
+      azureFile:
+        shareName: grafana-provisioning
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+    - name: grafana-dashboards
+      azureFile:
+        shareName: grafana-dashboards
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+    - name: loki-config
+      azureFile:
+        shareName: loki-config
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+    - name: loki-data
+      azureFile:
+        shareName: loki-data
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+    - name: tempo-config
+      azureFile:
+        shareName: tempo-config
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+    - name: tempo-data
+      azureFile:
+        shareName: tempo-data
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+    - name: alertmanager-config
+      azureFile:
+        shareName: alertmanager-config
+        storageAccountName: raceflowobsstorage
+        storageAccountKey: "<STORAGE_ACCOUNT_KEY>"
+tags: {}
+type: Microsoft.ContainerInstance/containerGroups
