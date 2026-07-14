@@ -48,3 +48,59 @@ scrape_configs:
   - job_name: prometheus
     static_configs:
       - targets: ["localhost:9090"]
+
+  # --- Azure App Service (production deployment) ---
+  # Same 6 services, scraped directly over HTTPS at their real Azure
+  # hostnames. /actuator/prometheus is a public endpoint on each App
+  # Service, so no VNet/private networking is required to reach it.
+  # Separate job names (not shared with the -local jobs above) so
+  # `up{job=...}` and the alert rules can distinguish local dev from
+  # the real deployment instead of conflating the two.
+
+  - job_name: raceflow-api-gateway-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-gateway-g8csc0dfh0dxhcax.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-auth-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-auth-svc-etcwe5asgrhtfqad.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-room-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-room-svc-aqgybpeffvb0cvbn.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-realtime-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-realtime-svc-h4fvhydkd2gthheb.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-session-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-session-svc-fedte8c0f7frf2dp.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-metrics-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-metrics-svc-d9bxepdgbpfnf2fe.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
