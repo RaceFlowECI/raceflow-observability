@@ -33,11 +33,11 @@ groups:
     rules:
 
       - alert: RaceFlowRankingLatencyHigh
-        expr: |
-          histogram_quantile(
-            0.99,
-            rate(raceflow_ranking_update_duration_seconds_bucket[5m])
-          ) > 1.0
+        # raceflow_ranking_update_duration_seconds is a Micrometer Summary
+        # (publishPercentiles), not a real histogram -- there is no _bucket
+        # series to feed histogram_quantile(). Query the pre-computed
+        # quantile series directly instead.
+        expr: raceflow_ranking_update_duration_seconds{quantile="0.99"} > 1.0
         for: 3m
         labels:
           severity: critical
