@@ -12,10 +12,26 @@ Stack de observabilidad completo para RaceFlow usando Docker Compose.
 | Promtail | — | Recoleccion de logs JSON desde los servicios |
 | Tempo | 3200 / 4317 / 4318 | Backend de trazas OTLP |
 
+## Alcance: local y produccion
+
+Prometheus scrapea **dos copias de cada uno de los 6 servicios**:
+
+- `raceflow-<servicio>` — instancia local (`host.docker.internal:8080-8085`),
+  solo activa si corres los servicios con `mvn spring-boot:run`.
+- `raceflow-<servicio>-prod` — la app real desplegada en Azure App
+  Service, scrapeada directo por HTTPS (`/actuator/prometheus` es un
+  endpoint publico en cada App Service, no requiere VNet). Se distinguen
+  con el label `env="prod"`.
+
+Las 3 alertas (`up{job=~"raceflow-.*"}`) cubren ambas automaticamente,
+sin distincion — si la produccion cae, alerta igual que si cae tu local.
+
 ## Pre-requisitos
 
 - Docker Desktop (Windows/Mac) con `host.docker.internal` habilitado
-- Los seis microservicios corriendo en los puertos 8080-8085
+- Los seis microservicios corriendo en los puertos 8080-8085 (opcional —
+  solo necesario para ver datos en los jobs `-local`; los jobs `-prod`
+  funcionan sin nada corriendo en tu maquina)
 - Los repos clonados como **hermanos** de este directorio:
 
 ```
@@ -78,7 +94,7 @@ raceflow-observability/
 ├── docker-compose.yml
 └── observability/
     ├── prometheus/
-    │   ├── prometheus.yml    # scrape 6 servicios via host.docker.internal
+    │   ├── prometheus.yml    # scrape 6 servicios local (host.docker.internal) + 6 prod (Azure HTTPS)
     │   └── rules.yml         # 3 alertas (ServiceDown, HighErrorRate, RankingLatencyHigh)
     ├── loki/
     │   └── loki-config.yml   # filesystem, tsdb v13
