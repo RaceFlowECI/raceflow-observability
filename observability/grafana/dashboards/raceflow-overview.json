@@ -392,7 +392,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, rate(raceflow_ranking_update_duration_seconds_bucket[5m]))",
+          "expr": "raceflow_ranking_update_duration_seconds{quantile=\"0.99\"}",
           "legendFormat": "p99",
           "instant": false,
           "refId": "A"
@@ -625,7 +625,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, rate(raceflow_ranking_update_duration_seconds_bucket[5m]))",
+          "expr": "raceflow_ranking_update_duration_seconds{quantile=\"0.5\"}",
           "legendFormat": "p50",
           "refId": "A"
         },
@@ -634,7 +634,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, rate(raceflow_ranking_update_duration_seconds_bucket[5m]))",
+          "expr": "raceflow_ranking_update_duration_seconds{quantile=\"0.95\"}",
           "legendFormat": "p95",
           "refId": "B"
         },
@@ -643,7 +643,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, rate(raceflow_ranking_update_duration_seconds_bucket[5m]))",
+          "expr": "raceflow_ranking_update_duration_seconds{quantile=\"0.99\"}",
           "legendFormat": "p99",
           "refId": "C"
         },
