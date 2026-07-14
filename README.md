@@ -26,6 +26,15 @@ Prometheus scrapea **dos copias de cada uno de los 6 servicios**:
 Las 3 alertas (`up{job=~"raceflow-.*"}`) cubren ambas automaticamente,
 sin distincion — si la produccion cae, alerta igual que si cae tu local.
 
+## Despliegue en la nube (Azure Container Instances)
+
+Ademas de `docker compose up` en tu maquina, este stack se puede
+desplegar como container group publico en ACI, apuntando unicamente a
+los 6 servicios de produccion (sin necesitar nada corriendo en local).
+Pensado para prender antes de una demo/sustentacion y borrar despues,
+no para dejarlo corriendo 24/7 — ver **[`deploy/aci/README.md`](deploy/aci/README.md)**
+para los comandos de despliegue, verificacion y limpieza.
+
 ## Pre-requisitos
 
 - Docker Desktop (Windows/Mac) con `host.docker.internal` habilitado
