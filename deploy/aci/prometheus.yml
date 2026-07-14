@@ -1,0 +1,81 @@
+# ACI-specific variant of ../../observability/prometheus/prometheus.yml.
+# Differences from the docker-compose version:
+#   - alertmanager target is localhost:9093, not alertmanager:9093 --
+#     ACI container groups share one network namespace (localhost),
+#     there is no per-container DNS name like in docker-compose.
+#   - the -local scrape jobs (host.docker.internal:8080-8085) are
+#     dropped entirely -- that hostname is meaningless in ACI and would
+#     just sit permanently "down", adding noise with no value.
+#   - external_labels.cluster is "raceflow-cloud" instead of
+#     "raceflow-local", so alerts/dashboards can tell which Prometheus
+#     instance fired them if you ever run both at once.
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: raceflow-cloud
+
+rule_files:
+  - /etc/prometheus/rules.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["localhost:9093"]
+      timeout: 10s
+
+scrape_configs:
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Azure App Service (production deployment). Same 6 services, scraped
+  # directly over HTTPS at their real Azure hostnames.
+  - job_name: raceflow-api-gateway-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-gateway-g8csc0dfh0dxhcax.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-auth-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-auth-svc-etcwe5asgrhtfqad.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-room-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-room-svc-aqgybpeffvb0cvbn.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-realtime-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-realtime-svc-h4fvhydkd2gthheb.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-session-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-session-svc-fedte8c0f7frf2dp.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
+
+  - job_name: raceflow-metrics-service-prod
+    scheme: https
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["raceflow-metrics-svc-d9bxepdgbpfnf2fe.mexicocentral-01.azurewebsites.net"]
+        labels:
+          env: prod
