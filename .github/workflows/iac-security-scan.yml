@@ -16,5 +16,6 @@ jobs:
         with:
           directory: .
           framework: secrets,yaml
+          baseline: .checkov.baseline
           soft_fail: false
           output_format: cli

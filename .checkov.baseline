@@ -1,0 +1,15 @@
+{
+    "failed_checks": [
+        {
+            "file": "/docker-compose.yml",
+            "findings": [
+                {
+                    "resource": "c25dda7f1b017a3407edc343cbbb637a3e57275a",
+                    "check_ids": [
+                        "CKV_SECRET_6"
+                    ]
+                }
+            ]
+        }
+    ]
+}

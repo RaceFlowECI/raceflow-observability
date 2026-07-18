@@ -56,3 +56,11 @@ corrige -- no simplemente ignorado en silencio.
 secretos en cada push/PR a este repo, para que un nuevo secreto hardcodeado
 (por ejemplo, en un futuro `deploy/gcp/` o `deploy/aws/`) se detecte antes
 de mergear, no después.
+
+El workflow usa `.checkov.baseline` (generado con
+`checkov -d . --framework secrets --create-baseline`) para suprimir
+únicamente el hallazgo ya revisado y aceptado arriba -- **no** para
+apagar el scanner. Cualquier secreto *nuevo* que no esté en el baseline
+sigue fallando el build. Regenerar el baseline solo después de revisar
+y aceptar conscientemente un hallazgo nuevo, nunca como forma de
+silenciar CI.
