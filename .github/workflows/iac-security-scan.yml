@@ -1,0 +1,21 @@
+name: IaC Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  checkov:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Checkov (secrets + config checks)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: secrets,yaml
+          baseline: .checkov.baseline
+          soft_fail: false
+          output_format: cli
