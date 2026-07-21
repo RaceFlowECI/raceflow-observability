@@ -27,6 +27,31 @@ Contra el stack local (`docker-compose.dev.yml` + los 6 servicios corriendo con 
 BASE_URL=http://localhost:8080 k6 run raceflow-load-test.js
 ```
 
+## Ver la corrida en vivo en Grafana
+
+`docker-compose.yml` levanta Prometheus con `--web.enable-remote-write-receiver`,
+así que k6 puede escribirle sus métricas directamente mientras corre la prueba
+(VUs, `http_req_duration`, `http_req_failed`, `http_reqs`, en tiempo real, no
+solo el resumen final de la terminal):
+
+```bash
+K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write \
+BASE_URL=https://raceflow-gateway-g8csc0dfh0dxhcax.mexicocentral-01.azurewebsites.net \
+  k6 run -o experimental-prometheus-rw raceflow-load-test.js
+```
+
+Luego, en Grafana (`http://localhost:3000`, `admin` / `raceflow2026`):
+
+1. Importar el dashboard oficial de k6 para Prometheus: **Dashboards → New →
+   Import**, ID `19665` (fuente de datos: `Prometheus`).
+2. Abrirlo *antes* de lanzar `k6 run` -- los paneles se llenan en vivo con la
+   rampa de VUs mientras corre.
+3. Para correlacionar con el resto del sistema, tener also abierto "RaceFlow —
+   Vista General" en otra pestaña: la subida de `Requests/s` y `Ranking
+   latencia p99` en ese dashboard debe coincidir en el tiempo con la rampa de
+   VUs del dashboard de k6 -- es la evidencia visual de que la carga generada
+   realmente está llegando al sistema.
+
 ## Correlación con el dashboard de Grafana
 
 Mientras corre la prueba, observar en el dashboard "RaceFlow — Vista General"

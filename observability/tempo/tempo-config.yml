@@ -27,8 +27,8 @@ storage:
     backend: local
     block:
       bloom_filter_false_positive: .05
-      index_downsample_bytes:      1000
-      encoding:                    zstd
+      v2_index_downsample_bytes:   1000
+      v2_encoding:                 zstd
     wal:
       path: /tmp/tempo/wal
     local:
